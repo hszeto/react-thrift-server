@@ -3,66 +3,35 @@ import * as bodyParser from 'body-parser'
 import * as cors from 'cors'
 import * as express from 'express'
 import {
-  SessionId,
-  UserAuthenticationService,
-  UserProperties,
-} from './codegen/com/gimbal/UserAuthenticationService_042220'
+  DemoService,
+  DemoServiceException,
+  User,
+} from './codegen/com/demo/DemoService'
+import {
+  findUser,
+  IMockUser,
+} from './data'
 
 (async function startContentServer() {
   const app: express.Application = express()
 
   const serverConfig = {
     hostName: 'localhost',
-    port: 8095,
+    port: 8000,
     path: '/',
   }
 
-  const serviceHandler: UserAuthenticationService.IHandler<express.Request> = {
-    createUserSessionFromAdminSession(
-      adminSession: SessionId, userEmailAddress: string, context?: express.Request | undefined,
-    ): SessionId | Promise<SessionId> {
-      console.log(userEmailAddress)
+  const serviceHandler: DemoService.IHandler<express.Request> = {
+    getUserInfo(userId: number, context?: express.Request | undefined): User | Promise<User> {
+      const user: IMockUser | undefined = findUser(userId)
 
-      if (userEmailAddress === 'test@gimbal.com') {
-        return new SessionId({lowBits: 1, highBits: 1})
+      if (user !== undefined) {
+        return new User(user)
+      } else {
+        throw new DemoServiceException({
+          message: `Unable to find user id: ${userId}`,
+        })
       }
-
-      return new SessionId({lowBits: 0, highBits: 0})
-    },
-    sendUserSessionCreationTokenToUserEmailAddress(
-      userEmailAddress: string, context?: express.Request | undefined,
-    ): void | Promise<void> {
-      return
-    },
-    createUserSessionWithToken(
-      token: string, context?: express.Request | undefined,
-    ): SessionId | Promise<SessionId> {
-      return new SessionId({lowBits: 1, highBits: 1})
-    },
-    createUserSessionWithEmailAddressAndPassword(
-      emailAddress: string, password: string, context?: express.Request | undefined,
-    ): SessionId | Promise<SessionId> {
-      console.log(emailAddress)
-      if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(emailAddress)) {
-        return new SessionId({lowBits: 1, highBits: 1})
-      }
-
-      return new SessionId({lowBits: 0, highBits: 0})
-    },
-    terminateUserSession(
-      userSession: SessionId, context?: express.Request | undefined,
-    ): void | Promise<void> {
-      return
-    },
-    setPasswordForSessionUser(
-      userSession: SessionId, password: string, context?: express.Request | undefined,
-    ): void | Promise<void> {
-      return
-    },
-    getPropertiesForSessionUser(
-      userSession: SessionId, context?: express.Request | undefined,
-    ): UserProperties | Promise<UserProperties> {
-      return new UserProperties({emailAddress: 'user@gimbal.com'})
     },
   }
 
@@ -72,7 +41,7 @@ import {
     bodyParser.raw(),
     ThriftServerExpress({
       serviceName: 'content-service',
-      handler: new UserAuthenticationService.Processor(serviceHandler),
+      handler: new DemoService.Processor(serviceHandler),
     }),
   )
 
