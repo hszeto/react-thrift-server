@@ -1,7 +1,10 @@
 # Thrift mock server
 
+### Dependencies:
+Checkout the `devDependencies` and `dependencies` list in `package.json`
+
 ### Thrift IDL
-The IDL file are located in `./thrift`
+The IDL file locates in `./thrift`
 
 ### Install
 
@@ -14,6 +17,7 @@ $ npm install
 ```sh
 $ npm run codegen
 ```
+It will read the IDL in `./thrift` and create Thrift related files in `./src/codegen`  
 
 ### Start
 
